@@ -60,9 +60,9 @@ if __name__ == '__main__':
    test_loader = create_dataloader(test_data_grouped, args.batch_size, False)
 
    # Initialize the model
-   my_model = RepAs(args, len(vocab) + 1, max_len, feature_size)
-   my_model.to(device)
-   optimizer = torch.optim.Adam(my_model.parameters(), lr=args.lr)
+   repas_model = RepAs(args, len(vocab) + 1, max_len, feature_size)
+   repas_model.to(device)
+   optimizer = torch.optim.Adam(repas_model.parameters(), lr=args.lr)
 
    print('Model training...')
    best_mae = 100
@@ -73,18 +73,18 @@ if __name__ == '__main__':
        for batch in train_loader:
            gene_loss = []
            loss = 0
-           my_model.train()
+           repas_model.train()
            optimizer.zero_grad()
            for gene in range(len(batch)):
-               gene_loss.append(my_model(batch[gene]))
+               gene_loss.append(repas_model(batch[gene]))
            loss = sum(gene_loss) / len(gene_loss)
            loss.backward()
            optimizer.step()
            total_loss += loss.item()
 
        print(f'Epoch {i + 1}: Training Loss =', total_loss)
-       eval_mae = evaluate(my_model, val_loader, False)
-       ckpt = (my_model.state_dict(), optimizer.state_dict())
+       eval_mae = evaluate(repas_model, val_loader, False)
+       ckpt = (repas_model.state_dict(), optimizer.state_dict())
        torch.save(ckpt, os.path.join(args.model_path, f"model{i + 1}"))
        print(f'Epoch {i + 1}: Validation MAE =', eval_mae)
        if eval_mae < best_mae:
@@ -92,5 +92,5 @@ if __name__ == '__main__':
            best_epoch = i + 1
 
    best_ckpt = os.path.join(args.model_path, f"model{best_epoch}")
-   my_model.load_state_dict(torch.load(best_ckpt)[0])
-   evaluate(my_model, test_loader, True)
+   repas_model.load_state_dict(torch.load(best_ckpt)[0])
+   evaluate(repas_model, test_loader, True)
